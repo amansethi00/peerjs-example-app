@@ -1,11 +1,12 @@
+// @ts-nocheck
 import * as React from 'react';
 import * as ReactDom from 'react-dom';
 import PeerJs from 'peerjs';
 import { Switch, Route, BrowserRouter, useHistory } from 'react-router-dom';
 
-let peer: PeerJs;
-let connection: PeerJs.DataConnection;
-const getUserMedia = navigator.getUserMedia || navigator['webkitGetUserMedia'] || navigator['mozGetUserMedia'];
+let peer;
+let connection;
+const getUserMedia = navigator.mediaDevices.getUserMedia;
 
 interface ChatMessage {
   id: number;
@@ -126,39 +127,37 @@ const Call: React.FC = () => {
       ]),
     [],
   );
+  console.log('yas', availableConnection, availablePeer);
 
   React.useEffect(() => {
     if (availableConnection && availablePeer) {
-      let dispose = () => {};
-      const handler = (call: PeerJs.MediaConnection) => {
-        getUserMedia(
-          { video: true, audio: true },
-          (stream) => {
-            showVideo(stream, selfVideo.current, true);
-            call.answer(stream);
-          },
-          (error) => {
-            console.log('Failed to get local stream', error);
-          },
-        );
+      (async () => {
+        let dispose = () => {};
+        const handler = async (call: PeerJs.MediaConnection) => {
+          console.log('was called graefully');
+          const stream = await getUserMedia({ video: false, audio: true });
 
-        dispose = showStream(call, otherVideo.current);
-      };
+          showVideo(stream, selfVideo.current, true);
+          call.answer(stream);
 
-      if (availableConnection['caller'] === availablePeer.id) {
-        getUserMedia(
-          { video: true, audio: true },
-          (stream) => {
+          dispose = showStream(call, otherVideo.current);
+        };
+
+        if (availableConnection['caller'] === availablePeer.id) {
+          console.log('152', 'was called graefully');
+          try {
+            const stream = await getUserMedia({ video: false, audio: true });
+
             showVideo(stream, selfVideo.current, true);
             dispose = showStream(availablePeer.call(availableConnection.peer, stream), otherVideo.current);
-          },
-          (error) => {
-            console.log('Failed to get local stream', error);
-          },
-        );
-      } else {
-        availablePeer.on('call', handler);
-      }
+          } catch (e) {
+            console.log('eee', e);
+          }
+        } else {
+          console.log('164');
+          availablePeer.on('call', handler);
+        }
+      })();
 
       return () => {
         availablePeer.off('call', handler);
