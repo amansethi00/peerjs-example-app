@@ -96,7 +96,7 @@ const Overview: React.FC = () => {
   );
 };
 
-function showVideo(stream: MediaStream, video: HTMLVideoElement, muted: boolean) {
+function showVideo(stream: MediaStream, video: HTMLAudioElement, muted: boolean) {
   console.log('stream in showideo', stream);
   console.log('video in showVideo', video);
   if (!stream || !video) {
@@ -128,8 +128,8 @@ function showStream(call: PeerJs.MediaConnection, otherVideo: HTMLVideoElement) 
 
 const Call: React.FC = () => {
   const history = useHistory();
-  const otherVideo = React.useRef<HTMLVideoElement>();
-  const selfVideo = React.useRef<HTMLVideoElement>();
+  const otherVideo = React.useRef<HTMLAudioElement>();
+  const selfVideo = React.useRef<HTMLAudioElement>();
   const [messages, setMessages] = React.useState<Array<ChatMessage>>([]);
   const [availablePeer] = React.useState(peer);
   const [availableConnection, setAvailableConnection] = React.useState(connection);
@@ -161,22 +161,22 @@ const Call: React.FC = () => {
 
   React.useEffect(() => {
     if (availableConnection && availablePeer) {
+      const handler = async (call: PeerJs.MediaConnection) => {
+        console.log('was called graefully');
+        const stream = await getUserMedia({ video: false, audio: true });
+
+        showVideo(stream, selfVideo.current, true);
+        call.answer(stream);
+
+        dispose = showStream(call, otherVideo.current);
+      };
       (async () => {
         let dispose = () => {};
-        const handler = async (call: PeerJs.MediaConnection) => {
-          console.log('was called graefully');
-          const stream = await getUserMedia({ video: true, audio: true });
-
-          showVideo(stream, selfVideo.current, true);
-          call.answer(stream);
-
-          dispose = showStream(call, otherVideo.current);
-        };
 
         if (availableConnection['caller'] === availablePeer.id) {
           console.log('152', 'was called graefully');
           try {
-            const stream = await getUserMedia({ video: true, audio: true });
+            const stream = await getUserMedia({ video: false, audio: true });
             console.log('stream', stream);
 
             showVideo(stream, selfVideo.current, true);
@@ -187,6 +187,7 @@ const Call: React.FC = () => {
         } else {
           console.log('164', 'must have answered before');
           availablePeer.on('call', handler);
+          availablePeer.on('error');
         }
       })();
 
@@ -240,7 +241,7 @@ const Call: React.FC = () => {
       <h1>
         {availablePeer?.id} ⬄ {availableConnection?.peer} <button onClick={disconnect}>Hang up</button>
       </h1>
-      <video ref={otherVideo} width={500} height={500} />
+      <audio ref={otherVideo} />
       {/* <video ref={selfVideo} width={200} height={200} /> */}
       <div>
         {messages.map((msg) => (
