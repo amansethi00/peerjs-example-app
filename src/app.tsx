@@ -24,7 +24,11 @@ const NameInput: React.FC = () => {
     const input = ev.currentTarget.elements.namedItem('name') as HTMLInputElement;
     const user = input.value;
     ev.preventDefault();
-    setAvailablePeer(new PeerJs(user));
+    setAvailablePeer(
+      new PeerJs(user, {
+        debug: 3,
+      }),
+    );
   }, []);
 
   React.useEffect(() => {
@@ -46,14 +50,15 @@ const NameInput: React.FC = () => {
 
 const Overview: React.FC = () => {
   const history = useHistory();
-  const [availablePeer] = React.useState(peer);
-  const [availableConnection, setAvailableConnection] = React.useState(connection);
+  const [availablePeer] = React.useState(peer); // this is me
+  const [availableConnection, setAvailableConnection] = React.useState(connection); // this is remote user i am connecting to
 
   const submit = React.useCallback<React.FormEventHandler<HTMLFormElement>>(
     (ev) => {
       const input = ev.currentTarget.elements.namedItem('name') as HTMLInputElement;
       const otherUser = input.value;
       const connection = availablePeer.connect(otherUser);
+      availablePeer.on('error', (err) => console.log('failed to connect'));
       connection['caller'] = availablePeer.id;
       ev.preventDefault();
       setAvailableConnection(connection);
@@ -70,6 +75,7 @@ const Overview: React.FC = () => {
       history.replace('/call');
     } else {
       const handler = (connection: PeerJs.DataConnection) => {
+        console.log('data conection established', connection);
         connection['caller'] = connection.peer;
         setAvailableConnection(connection);
       };
@@ -91,18 +97,31 @@ const Overview: React.FC = () => {
 };
 
 function showVideo(stream: MediaStream, video: HTMLVideoElement, muted: boolean) {
+  if (!stream || !video) {
+    console.error('Invalid stream or video element.');
+    return;
+  }
   video.srcObject = stream;
-  video.volume = muted ? 0 : 1;
+  // video.volume = muted ? 0 : 1;
+  video.volume = 1;
   video.onloadedmetadata = () => video.play();
 }
+const errorHandler = (err) => {
+  console.log('error ', err);
+};
 
 function showStream(call: PeerJs.MediaConnection, otherVideo: HTMLVideoElement) {
   const handler = (remoteStream: MediaStream) => {
+    console.log('handling stream');
     showVideo(remoteStream, otherVideo, false);
   };
   call.on('stream', handler);
+  call.on('error', errorHandler);
 
-  return () => call.off('stream', handler);
+  return () => {
+    call.off('stream', handler);
+    call.off('error', errorHandler);
+  };
 }
 
 const Call: React.FC = () => {
@@ -128,6 +147,15 @@ const Call: React.FC = () => {
     [],
   );
   console.log('yas', availableConnection, availablePeer);
+  const errHandler = (err) => {
+    console.log('errored', err);
+  };
+  React.useEffect(() => {
+    availablePeer.on('error', errHandler);
+    return () => {
+      availablePeer.off('error', errHandler);
+    };
+  }, []);
 
   React.useEffect(() => {
     if (availableConnection && availablePeer) {
@@ -135,7 +163,7 @@ const Call: React.FC = () => {
         let dispose = () => {};
         const handler = async (call: PeerJs.MediaConnection) => {
           console.log('was called graefully');
-          const stream = await getUserMedia({ video: false, audio: true });
+          const stream = await getUserMedia({ video: true, audio: true });
 
           showVideo(stream, selfVideo.current, true);
           call.answer(stream);
@@ -146,7 +174,8 @@ const Call: React.FC = () => {
         if (availableConnection['caller'] === availablePeer.id) {
           console.log('152', 'was called graefully');
           try {
-            const stream = await getUserMedia({ video: false, audio: true });
+            const stream = await getUserMedia({ video: true, audio: true });
+            console.log('stream', stream);
 
             showVideo(stream, selfVideo.current, true);
             dispose = showStream(availablePeer.call(availableConnection.peer, stream), otherVideo.current);
@@ -210,7 +239,7 @@ const Call: React.FC = () => {
         {availablePeer?.id} ⬄ {availableConnection?.peer} <button onClick={disconnect}>Hang up</button>
       </h1>
       <video ref={otherVideo} width={500} height={500} />
-      <video ref={selfVideo} width={200} height={200} />
+      {/* <video ref={selfVideo} width={200} height={200} /> */}
       <div>
         {messages.map((msg) => (
           <p key={msg.id} style={{ color: msg.self ? '#999' : '#222' }}>
