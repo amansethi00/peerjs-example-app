@@ -97,6 +97,8 @@ const Overview: React.FC = () => {
 };
 
 function showVideo(stream: MediaStream, video: HTMLVideoElement, muted: boolean) {
+  console.log('stream in showideo', stream);
+  console.log('video in showVideo', video);
   if (!stream || !video) {
     console.error('Invalid stream or video element.');
     return;
@@ -183,7 +185,7 @@ const Call: React.FC = () => {
             console.log('eee', e);
           }
         } else {
-          console.log('164');
+          console.log('164', 'must have answered before');
           availablePeer.on('call', handler);
         }
       })();
