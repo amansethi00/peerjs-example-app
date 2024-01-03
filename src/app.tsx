@@ -160,6 +160,7 @@ const Call: React.FC = () => {
   }, []);
 
   React.useEffect(() => {
+    let dispose = () => {};
     if (availableConnection && availablePeer) {
       const handler = async (call: PeerJs.MediaConnection) => {
         console.log('was called graefully');
@@ -171,8 +172,6 @@ const Call: React.FC = () => {
         dispose = showStream(call, otherVideo.current);
       };
       (async () => {
-        let dispose = () => {};
-
         if (availableConnection['caller'] === availablePeer.id) {
           console.log('152', 'was called graefully');
           try {
@@ -193,7 +192,7 @@ const Call: React.FC = () => {
 
       return () => {
         availablePeer.off('call', handler);
-        dispose();
+        dispose?.();
       };
     }
   }, [availableConnection, availablePeer]);
