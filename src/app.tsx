@@ -103,11 +103,11 @@ const Overview: React.FC = () => {
   return (
     <div>
       <h1>Hi, {availablePeer?.id}</h1>
-      <form onSubmit={submit}>
-        <label>Name to call:</label>
-        <input name="name" />
-        <button>Call</button>
-      </form>
+      {/* <form onSubmit={submit}> */}
+      <label>Name to call:</label>
+      <input name="name" />
+      <button onClick={submit}>Call</button>
+      {/* </form> */}
     </div>
   );
 };
