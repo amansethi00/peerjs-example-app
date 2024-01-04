@@ -67,13 +67,14 @@ const NameInput: React.FC = () => {
 const Overview: React.FC = () => {
   const history = useHistory();
   const [availablePeer] = React.useState(peer); // this is me
+  const [peername, setpeername] = React.useState('');
   const [availableConnection, setAvailableConnection] = React.useState(connection); // this is remote user i am connecting to
 
   const submit = React.useCallback<React.FormEventHandler<HTMLFormElement>>(
     (ev) => {
-      const input = ev.currentTarget.elements.namedItem('name') as HTMLInputElement;
-      const otherUser = input.value;
-      const connection = availablePeer.connect(otherUser);
+      // const input = ev.currentTarget.elements.namedItem('name') as HTMLInputElement;
+      // const otherUser = input.value;
+      const connection = availablePeer.connect(peername);
       availablePeer.on('error', (err) => console.log('failed to connect'));
       connection['caller'] = availablePeer.id;
       ev.preventDefault();
@@ -105,7 +106,7 @@ const Overview: React.FC = () => {
       <h1>Hi, {availablePeer?.id}</h1>
       {/* <form onSubmit={submit}> */}
       <label>Name to call:</label>
-      <input name="name" />
+      <input onChange={(e) => setpeername(e.target.value)} name="name" />
       <button onClick={submit}>Call</button>
       {/* </form> */}
     </div>
