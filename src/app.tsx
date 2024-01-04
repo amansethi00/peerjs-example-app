@@ -29,19 +29,42 @@ const NameInput: React.FC = () => {
       new PeerJs(user, {
         debug: 3,
         config: {
-          iceServers: {
-            username: 'QTC0C3DPU-xkPMfcsj7PWdDwpolyNcIbVJbiGBu5J8b2-6nraHT8jYDjCzNfcMfpAAAAAGWWtiZhbWFu',
-            urls: [
-              'stun:bn-turn1.xirsys.com',
-              'turn:bn-turn1.xirsys.com:80?transport=udp',
-              'turn:bn-turn1.xirsys.com:3478?transport=udp',
-              'turn:bn-turn1.xirsys.com:80?transport=tcp',
-              'turn:bn-turn1.xirsys.com:3478?transport=tcp',
-              'turns:bn-turn1.xirsys.com:443?transport=tcp',
-              'turns:bn-turn1.xirsys.com:5349?transport=tcp',
-            ],
-            credential: '54ab9252-ab07-11ee-a7e9-0242ac140004',
-          },
+          iceServers: [
+            { url: 'stun:stun01.sipphone.com' },
+            { url: 'stun:stun.ekiga.net' },
+            { url: 'stun:stun.fwdnet.net' },
+            { url: 'stun:stun.ideasip.com' },
+            { url: 'stun:stun.iptel.org' },
+            { url: 'stun:stun.rixtelecom.se' },
+            { url: 'stun:stun.schlund.de' },
+            { url: 'stun:stun.l.google.com:19302' },
+            { url: 'stun:stun1.l.google.com:19302' },
+            { url: 'stun:stun2.l.google.com:19302' },
+            { url: 'stun:stun3.l.google.com:19302' },
+            { url: 'stun:stun4.l.google.com:19302' },
+            { url: 'stun:stunserver.org' },
+            { url: 'stun:stun.softjoys.com' },
+            { url: 'stun:stun.voiparound.com' },
+            { url: 'stun:stun.voipbuster.com' },
+            { url: 'stun:stun.voipstunt.com' },
+            { url: 'stun:stun.voxgratia.org' },
+            { url: 'stun:stun.xten.com' },
+            {
+              url: 'turn:numb.viagenie.ca',
+              credential: 'muazkh',
+              username: 'webrtc@live.com',
+            },
+            {
+              url: 'turn:192.158.29.39:3478?transport=udp',
+              credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+              username: '28224511:1379330808',
+            },
+            {
+              url: 'turn:192.158.29.39:3478?transport=tcp',
+              credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+              username: '28224511:1379330808',
+            },
+          ],
         },
       }),
     );
@@ -67,14 +90,15 @@ const NameInput: React.FC = () => {
 const Overview: React.FC = () => {
   const history = useHistory();
   const [availablePeer] = React.useState(peer); // this is me
-  const [peername, setpeername] = React.useState('');
+  const peernameref = React.useRef(null);
   const [availableConnection, setAvailableConnection] = React.useState(connection); // this is remote user i am connecting to
 
   const submit = React.useCallback<React.FormEventHandler<HTMLFormElement>>(
     (ev) => {
       // const input = ev.currentTarget.elements.namedItem('name') as HTMLInputElement;
       // const otherUser = input.value;
-      const connection = availablePeer.connect(peername);
+      const connection = availablePeer.connect(peernameref.current.value);
+      console.log('pname', peernameref.current.value);
       availablePeer.on('error', (err) => console.log('failed to connect'));
       connection['caller'] = availablePeer.id;
       ev.preventDefault();
@@ -106,7 +130,7 @@ const Overview: React.FC = () => {
       <h1>Hi, {availablePeer?.id}</h1>
       {/* <form onSubmit={submit}> */}
       <label>Name to call:</label>
-      <input onChange={(e) => setpeername(e.target.value)} name="name" />
+      <input ref={peernameref} name="name" />
       <button onClick={submit}>Call</button>
       {/* </form> */}
     </div>
