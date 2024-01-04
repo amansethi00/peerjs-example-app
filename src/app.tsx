@@ -1,8 +1,8 @@
 // @ts-nocheck
+import PeerJs from 'peerjs';
 import * as React from 'react';
 import * as ReactDom from 'react-dom';
-import PeerJs from 'peerjs';
-import { Switch, Route, BrowserRouter, useHistory } from 'react-router-dom';
+import { BrowserRouter, Route, Switch, useHistory } from 'react-router-dom';
 
 let peer;
 let connection;
@@ -24,9 +24,25 @@ const NameInput: React.FC = () => {
     const input = ev.currentTarget.elements.namedItem('name') as HTMLInputElement;
     const user = input.value;
     ev.preventDefault();
+
     setAvailablePeer(
       new PeerJs(user, {
         debug: 3,
+        config: {
+          iceServers: {
+            username: 'QTC0C3DPU-xkPMfcsj7PWdDwpolyNcIbVJbiGBu5J8b2-6nraHT8jYDjCzNfcMfpAAAAAGWWtiZhbWFu',
+            urls: [
+              'stun:bn-turn1.xirsys.com',
+              'turn:bn-turn1.xirsys.com:80?transport=udp',
+              'turn:bn-turn1.xirsys.com:3478?transport=udp',
+              'turn:bn-turn1.xirsys.com:80?transport=tcp',
+              'turn:bn-turn1.xirsys.com:3478?transport=tcp',
+              'turns:bn-turn1.xirsys.com:443?transport=tcp',
+              'turns:bn-turn1.xirsys.com:5349?transport=tcp',
+            ],
+            credential: '54ab9252-ab07-11ee-a7e9-0242ac140004',
+          },
+        },
       }),
     );
   }, []);
@@ -129,7 +145,6 @@ function showStream(call: PeerJs.MediaConnection, otherVideo: HTMLVideoElement) 
 const Call: React.FC = () => {
   const history = useHistory();
   const otherVideo = React.useRef<HTMLAudioElement>();
-  const selfVideo = React.useRef<HTMLAudioElement>();
   const [messages, setMessages] = React.useState<Array<ChatMessage>>([]);
   const [availablePeer] = React.useState(peer);
   const [availableConnection, setAvailableConnection] = React.useState(connection);
@@ -166,7 +181,7 @@ const Call: React.FC = () => {
         console.log('was called graefully');
         const stream = await getUserMedia({ video: false, audio: true });
 
-        showVideo(stream, selfVideo.current, true);
+        // showVideo(stream, selfVideo.current, true);
         call.answer(stream);
 
         dispose = showStream(call, otherVideo.current);
@@ -178,7 +193,7 @@ const Call: React.FC = () => {
             const stream = await getUserMedia({ video: false, audio: true });
             console.log('stream', stream);
 
-            showVideo(stream, selfVideo.current, true);
+            // showVideo(stream, selfVideo.current, true);
             dispose = showStream(availablePeer.call(availableConnection.peer, stream), otherVideo.current);
           } catch (e) {
             console.log('eee', e);
